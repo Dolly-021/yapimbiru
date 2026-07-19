@@ -82,22 +82,22 @@
   <!-- Navbar -->
   <header class="relative z-10 w-full px-6 lg:px-16 py-6">
     <nav class="glass-effect rounded-2xl px-8 py-4 shadow-2xl">
-      <div class="flex justify-between items-center">
-        <div class="flex items-center gap-4">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
           <img src="{{ asset('images/yapim.png') }}" alt="Logo" class="w-14 h-auto object-contain rounded-xl shadow-lg">
           <div>
             <h1 class="font-bold text-xl tracking-tight">SMK YAPIM BIRU-BIRU</h1>
             <p class="text-xs text-cyan-200">Sistem Informasi Akademik</p>
           </div>
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-3 w-full sm:w-auto justify-center">
           <a href="{{ route('login') }}"
-            class="glass-effect hover:bg-white/20 px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 group">
+            class="glass-effect hover:bg-white/20 px-4 sm:px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 group flex-1 sm:flex-none">
             <i class="fas fa-sign-in-alt group-hover:translate-x-1 transition-transform"></i>
             Login
           </a>
           <a href="{{ route('register') }}"
-            class="bg-linear-to-r from-[#0369a1] to-[#06b6d4] hover:from-[#025a8a] hover:to-[#0891b2] px-6 py-2.5 rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            class="bg-linear-to-r from-[#0369a1] to-[#06b6d4] hover:from-[#025a8a] hover:to-[#0891b2] px-4 sm:px-6 py-2.5 rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 flex-1 sm:flex-none">
             <i class="fas fa-user-plus"></i>
             Register
           </a>

@@ -2,14 +2,19 @@
 
 @section('content')
 <div class="content-section">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 2rem;">
         <div>
             <h2 class="section-title">Daftar Tugas</h2>
             <p style="color: #718096; margin-top: 0.5rem;">Lihat tugas yang diberikan oleh guru dan kumpulkan jawaban</p>
         </div>
-        <a href="{{ route('siswa.dashboard') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+        <a href="{{ route('siswa.dashboard') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; flex: 1; min-width: 150px; max-width: 200px;">
             <i class="fas fa-arrow-left"></i> Kembali
         </a>
+        <style>
+            @media (max-width: 768px) {
+                .btn-secondary { max-width: 100% !important; }
+            }
+        </style>
     </div>
 
     @if(session('success'))

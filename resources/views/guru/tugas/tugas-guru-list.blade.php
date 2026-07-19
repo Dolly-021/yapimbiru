@@ -2,16 +2,21 @@
 
 @section('content')
 <div class="content-section">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 2rem;">
         <div>
             <h2 class="section-title">Daftar Tugas</h2>
             <p style="color: #718096; margin-top: 0.5rem;">Kelola tugas yang sudah dibuat dan lihat pengumpulan siswa</p>
         </div>
-        <div style="display: flex; gap: 1rem;">
-            <a href="{{ route('guru.dashboard') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; width: 100%;" class="mobile-action-buttons">
+            <style>
+                @media (min-width: 768px) {
+                    .mobile-action-buttons { width: auto !important; }
+                }
+            </style>
+            <a href="{{ route('guru.dashboard') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; flex: 1;">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
-            <a href="{{ route('guru.tugas.create') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <a href="{{ route('guru.tugas.create') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; flex: 1;">
                 <i class="fas fa-plus"></i>
                 Buat Tugas Baru
             </a>
@@ -33,8 +38,8 @@
             <p>Belum ada tugas yang dibuat</p>
         </div>
     @else
-        <div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
-            <table style="width: 100%; border-collapse: collapse;">
+        <div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow-x: auto; width: 100%;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
                 <thead style="background: linear-gradient(135deg, #0369a1 0%, #06b6d4 50%, #14b8a6 100%); color: white;">
                     <tr>
                         <th style="padding: 1rem; text-align: left; font-weight: 600;">No</th>
