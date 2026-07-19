@@ -1,0 +1,3075 @@
+<x-guest-layout>
+    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
+    </div>
+
+    <form method="POST" action="{{ route('password.confirm') }}">
+        @csrf
+
+        <!-- Password -->
+        <div>
+            <x-input-label for="password" :value="__('Password')" />
+
+            <x-text-input id="password" class="block mt-1 w-full"
+                            type="password"
+                            name="password"
+                            required autocomplete="current-password" />
+
+            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        </div>
+
+        <div class="flex justify-end mt-4">
+            <x-primary-button>
+                {{ __('Confirm') }}
+            </x-primary-button>
+        </div>
+    </form>
+</x-guest-layout>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Lupa Password - MSBD System</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/yapim.png?v=' . time() . '\)') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 50%, #14b8a6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .forgot-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 450px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .forgot-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .forgot-header h1 {
+            color: #0369a1;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .forgot-header p {
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.85rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .form-group input::placeholder {
+            color: #999;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #0369a1;
+            box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+        }
+        .btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(3, 105, 161, 0.3);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .login-link a {
+            color: #0369a1;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        .login-link a:hover {
+            color: #06b6d4;
+            text-decoration: underline;
+        }
+        .hint-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #0369a1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="forgot-container">
+        <div class="logo-container">
+            <img src="{{ asset('images/yapim.png') }}" alt="Logo MSBD">
+        </div>
+        <div class="forgot-header">
+            <h1>Lupa Password?</h1>
+            <p>Masukkan identitas Anda untuk reset password</p>
+        </div>
+
+        <form id="forgotForm" onsubmit="handleForgotPassword(event)">
+            @csrf
+
+            <div class="form-group">
+                <label for="identifier">NIS / NIP / Email</label>
+                <input type="text" id="identifier" name="identifier" required 
+                       placeholder="Masukkan NIS, NIP, atau Email Anda"
+                       autocomplete="off">
+                <p class="hint-text">
+                    <i class="fas fa-info-circle"></i>
+                    Gunakan NIS (siswa), NIP (guru), atau email yang terdaftar
+                </p>
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">
+                <span id="btnText">Kirim OTP</span>
+                <div class="loading-spinner" id="spinner"></div>
+            </button>
+        </form>
+
+        <div class="login-link">
+            <p><a href="{{ route('login') }}"><i class="fas fa-arrow-left"></i> Kembali ke Login</a></p>
+        </div>
+    </div>
+
+    <script>
+        function handleForgotPassword(event) {
+            event.preventDefault();
+            
+            const identifier = document.getElementById('identifier').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btnText');
+
+            if (!identifier) {
+                Swal.fire({
+                    title: 'Validasi!',
+                    text: 'Silakan isi NIS/NIP/Email',
+                    icon: 'warning',
+                    confirmButtonColor: '#0369a1'
+                });
+                return;
+            }
+
+            // Show loading
+            submitBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            btnText.textContent = 'Mengirim...';
+
+            fetch('{{ route("forgot-password.send-otp") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    identifier: identifier
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        html: `
+                            <p>OTP telah dikirim ke WhatsApp</p>
+                            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
+                                <i class="fas fa-mobile-alt"></i> ${data.phone}
+                            </p>
+                        `,
+                        icon: 'success',
+                        confirmButtonColor: '#0369a1',
+                        confirmButtonText: 'Lanjutkan'
+                    }).then(() => {
+                        // Redirect ke halaman verifikasi OTP
+                        window.location.href = `/forgot-password/verify/${data.token}`;
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Gagal!',
+                        text: data.message || 'Terjadi kesalahan',
+                        icon: 'error',
+                        confirmButtonColor: '#0369a1'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Terjadi kesalahan jaringan',
+                    icon: 'error',
+                    confirmButtonColor: '#0369a1'
+                });
+            })
+            .finally(() => {
+                // Hide loading
+                submitBtn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = 'Kirim OTP';
+            });
+        }
+    </script>
+</body>
+</html>
+<x-guest-layout>
+    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+    </div>
+
+    <!-- Session Status -->
+    <x-auth-session-status class="mb-4" :status="session('status')" />
+
+    <form method="POST" action="{{ route('password.email') }}">
+        @csrf
+
+        <!-- Email Address -->
+        <div>
+            <x-input-label for="email" :value="__('Email')" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
+            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
+
+        <div class="flex items-center justify-end mt-4">
+            <x-primary-button>
+                {{ __('Email Password Reset Link') }}
+            </x-primary-button>
+        </div>
+    </form>
+</x-guest-layout>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Login - MSBD System</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/yapim.png?v=' . time() . '\)') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 50%, #14b8a6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .login-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 420px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-header h1 {
+            color: #0369a1;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .login-header p {
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.85rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .form-group input::placeholder {
+            color: #999;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #0369a1;
+            box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+        }
+        .btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(3, 105, 161, 0.3);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .register-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        .register-link a {
+            color: #0369a1;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        .register-link a:hover {
+            color: #06b6d4;
+            text-decoration: underline;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .password-wrapper {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            font-size: 1.1rem;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .password-toggle:hover {
+            color: #0369a1;
+        }
+        .form-group.has-password input {
+            padding-right: 2.8rem;
+        }
+        .register-options {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        .register-options p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        .register-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .register-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid;
+            border-radius: 5px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .register-btn-guru {
+            background: white;
+            color: #2563eb;
+            border-color: #2563eb;
+        }
+        .register-btn-guru:hover {
+            background: #2563eb;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .register-btn-siswa {
+            background: white;
+            color: #0ea5e9;
+            border-color: #0ea5e9;
+        }
+        .register-btn-siswa:hover {
+            background: #0ea5e9;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .icon {
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-container">
+            <img src="{{ asset('images/yapim.png') }}" alt="Logo MSBD">
+        </div>
+        <div class="login-header">
+            <h1>Login</h1>
+            <p>Sistem Multi-Role Authentication</p>
+        </div>
+
+        <form method="POST" action="{{ route('login') }}">
+            @csrf
+            
+            <div class="form-group">
+                <label for="identifier">NIS / NIP / Email</label>
+                <input type="text" id="identifier" name="identifier" value="{{ old('identifier') }}" placeholder="Masukkan NIS, NIP, atau Email" required>
+                <small style="color: #666; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+                </small>
+            </div>
+
+            <div class="form-group has-password">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required placeholder="Masukkan password">
+                    <span class="password-toggle" onclick="togglePassword('password')">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn">Login</button>
+
+            <div class="register-link" style="margin-top: 1rem; text-align: center;">
+                <a href="{{ route('forgot-password') }}" style="font-size: 0.9rem; color: #666;">
+                    <i class="fas fa-key"></i> Lupa Password?
+                </a>
+            </div>
+        </form>
+
+        <!-- Opsi Registrasi -->
+        <div class="register-options">
+            <p>Belum punya akun? Daftar sebagai:</p>
+            <div class="register-buttons">
+                <a href="{{ route('register.guru') }}" class="register-btn register-btn-guru">
+                    <i class="fas fa-chalkboard-teacher icon"></i>
+                    Guru
+                </a>
+                <a href="{{ route('register.siswa') }}" class="register-btn register-btn-siswa">
+                    <i class="fas fa-user-graduate icon"></i>
+                    Siswa
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if ($errors->any())
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let errorMessages = '';
+            @foreach ($errors->all() as $error)
+                errorMessages += '{{ $error }}<br>';
+            @endforeach
+            
+            Swal.fire({
+                title: 'Terjadi Kesalahan!',
+                html: errorMessages,
+                icon: 'error',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#667eea'
+            });
+        });
+    </script>
+    @endif
+
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'Berhasil!',
+                text: "{{ session('success') }}",
+                icon: 'success',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#667eea',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    </script>
+    @endif
+
+    @if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'Gagal Login!',
+                text: "{{ session('error') }}",
+                icon: 'error',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#667eea'
+            });
+        });
+    </script>
+    @endif
+
+    <script>
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggle = event.target.closest('.password-toggle');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                passwordField.type = 'password';
+                toggle.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Registrasi Guru - MSBD System</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/yapim.png?v=' . time() . '\)') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 50%, #14b8a6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .register-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 600px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .register-header h1 {
+            color: #0369a1;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .register-header p {
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.85rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .form-group input::placeholder, .form-group select::placeholder, .form-group textarea::placeholder {
+            color: #999;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #0369a1;
+            box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+        }
+        .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2.5rem;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        .btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(3, 105, 161, 0.3);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .login-link a {
+            color: #0369a1;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        .login-link a:hover {
+            color: #06b6d4;
+            text-decoration: underline;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .password-wrapper {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            font-size: 1.1rem;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .password-toggle:hover {
+            color: #0369a1;
+        }
+        .form-group.has-password input {
+            padding-right: 2.8rem;
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+        }
+        .alert-error {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            color: #991b1b;
+        }
+        .alert-success {
+            background: #dcfce7;
+            border-left: 4px solid #16a34a;
+            color: #15803d;
+        }
+        .alert-info {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            color: #0c4a6e;
+        }
+        .hint-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        .error-text {
+            color: #dc2626;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="logo-container">
+            <img src="{{ asset('images/yapim.png') }}" alt="Logo MSBD">
+        </div>
+        <div class="register-header">
+            <h1>Registrasi Guru</h1>
+            <p>Sistem Informasi Manajemen Akademik SMK</p>
+        </div>
+
+        @if($errors->any())
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>
+                    @foreach ($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>{{ session('error') }}</div>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <div>{{ session('success') }}</div>
+            </div>
+        @endif
+
+        <form action="{{ route('register.guru.submit') }}" method="POST">
+            @csrf
+
+            <!-- NIP -->
+            <div class="form-group">
+                <label for="nip">NIP (Nomor Induk Pegawai)</label>
+                <input type="text" id="nip" name="nip" required 
+                       placeholder="Contoh: 123456789012345678"
+                       value="{{ old('nip') }}">
+                <p class="hint-text">Masukkan NIP dengan benar sesuai data pegawai</p>
+                @error('nip')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Nama Lengkap -->
+            <div class="form-group">
+                <label for="name">Nama Lengkap</label>
+                <input type="text" id="name" name="name" required 
+                       placeholder="Masukkan nama lengkap"
+                       value="{{ old('name') }}">
+                @error('name')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required 
+                       placeholder="contoh@email.com"
+                       value="{{ old('email') }}">
+                @error('email')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Nomor HP -->
+            <div class="form-group">
+                <label for="no_hp">Nomor HP</label>
+                <input type="text" id="no_hp" name="no_hp" required 
+                       placeholder="08xxxxxxxxxx"
+                       value="{{ old('no_hp') }}"
+                       pattern="[0-9]{10,15}"
+                       title="Nomor HP harus berisi 10-15 digit angka">
+                @error('no_hp')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Jenis Kelamin -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="jenis_kelamin">Jenis Kelamin</label>
+                    <select id="jenis_kelamin" name="jenis_kelamin" required>
+                        <option value="">Pilih Jenis Kelamin</option>
+                        <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
+                        <option value="P" {{ old('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
+                    </select>
+                    @error('jenis_kelamin')<p class="error-text">{{ $message }}</p>@enderror
+                </div>
+
+                <!-- Agama -->
+                <div class="form-group">
+                    <label for="agama">Agama</label>
+                    <select id="agama" name="agama" required>
+                        <option value="">Pilih Agama</option>
+                        <option value="Islam" {{ old('agama') == 'Islam' ? 'selected' : '' }}>Islam</option>
+                        <option value="Kristen" {{ old('agama') == 'Kristen' ? 'selected' : '' }}>Kristen</option>
+                        <option value="Katholik" {{ old('agama') == 'Katholik' ? 'selected' : '' }}>Katholik</option>
+                        <option value="Hindu" {{ old('agama') == 'Hindu' ? 'selected' : '' }}>Hindu</option>
+                        <option value="Budha" {{ old('agama') == 'Budha' ? 'selected' : '' }}>Budha</option>
+                        <option value="Konghucu" {{ old('agama') == 'Konghucu' ? 'selected' : '' }}>Konghucu</option>
+                    </select>
+                    @error('agama')<p class="error-text">{{ $message }}</p>@enderror
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group has-password">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Minimal 8 karakter">
+                    <span class="password-toggle" onclick="togglePassword('password')">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+                @error('password')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Konfirmasi Password -->
+            <div class="form-group has-password">
+                <label for="password_confirmation">Konfirmasi Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password_confirmation" name="password_confirmation" required 
+                           placeholder="Ulangi password">
+                    <span class="password-toggle" onclick="togglePassword('password_confirmation')">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+                @error('password_confirmation')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <button type="submit" class="btn">Daftar Sekarang</button>
+        </form>
+
+        <div class="login-link">
+            <p>Sudah punya akun? <a href="{{ route('login') }}">Login di sini</a></p>
+            <p style="margin-top: 0.5rem;"><a href="{{ route('register.siswa') }}">Daftar sebagai Siswa</a></p>
+        </div>
+    </div>
+
+    @if ($errors->any())
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let errorMessages = '';
+            @foreach ($errors->all() as $error)
+                errorMessages += '• {{ $error }}\n';
+            @endforeach
+            
+            Swal.fire({
+                title: 'Terjadi Kesalahan!',
+                text: errorMessages,
+                icon: 'error',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#0369a1'
+            });
+        });
+    </script>
+    @endif
+
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'Berhasil!',
+                text: "{{ session('success') }}",
+                icon: 'success',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#0369a1',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    </script>
+    @endif
+
+    <script>
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggle = event.target.closest('.password-toggle');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                passwordField.type = 'password';
+                toggle.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Registrasi Siswa - MSBD System</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/yapim.png?v=' . time() . '\)') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 50%, #14b8a6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .register-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 600px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .register-header h1 {
+            color: #0369a1;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .register-header p {
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.85rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .form-group input::placeholder, .form-group select::placeholder, .form-group textarea::placeholder {
+            color: #999;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #0369a1;
+            box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+        }
+        .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2.5rem;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        .btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(3, 105, 161, 0.3);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .login-link a {
+            color: #0369a1;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        .login-link a:hover {
+            color: #06b6d4;
+            text-decoration: underline;
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+        }
+        .alert-error {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            color: #991b1b;
+        }
+        .alert-success {
+            background: #dcfce7;
+            border-left: 4px solid #16a34a;
+            color: #15803d;
+        }
+        .alert-info {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            color: #0c4a6e;
+        }
+        .hint-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        .error-text {
+            color: #dc2626;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .password-wrapper {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            font-size: 1.1rem;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .password-toggle:hover {
+            color: #0369a1;
+        }
+        .form-group.has-password input {
+            padding-right: 2.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="logo-container">
+            <img src="{{ asset('images/yapim.png') }}" alt="Logo MSBD">
+        </div>
+        <div class="register-header">
+            <h1>Registrasi Siswa</h1>
+            <p>Sistem Informasi Manajemen Akademik SMK</p>
+        </div>
+
+        @if($errors->any())
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>
+                    @foreach ($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>{{ session('error') }}</div>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <div>{{ session('success') }}</div>
+            </div>
+        @endif
+
+        <form action="{{ route('register.siswa.submit') }}" method="POST">
+            @csrf
+
+            <!-- NIS -->
+            <div class="form-group">
+                <label for="nis">NIS (Nomor Induk Siswa)</label>
+                <input type="text" id="nis" name="nis" required 
+                       placeholder="Masukkan NIS (minimal 10 digit)"
+                       value="{{ old('nis') }}">
+                <p class="hint-text">Ketik 10 digit NIS untuk mengecek data siswa</p>
+                @error('nis')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Nama Lengkap -->
+            <div class="form-group">
+                <label for="name">Nama Lengkap</label>
+                <input type="text" id="name" name="name" required
+                       placeholder="Nama akan otomatis terisi jika NIS ditemukan"
+                       value="{{ old('name') }}">
+                <p class="hint-text" id="name-hint">Jika NIS tidak ditemukan, wajib diisi manual</p>
+                @error('name')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required 
+                       placeholder="contoh@email.com"
+                       value="{{ old('email') }}">
+                @error('email')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Nomor HP -->
+            <div class="form-group">
+                <label for="no_hp">Nomor HP</label>
+                <input type="text" id="no_hp" name="no_hp" required 
+                       placeholder="08xxxxxxxxxx"
+                       value="{{ old('no_hp') }}"
+                       pattern="[0-9]{10,15}"
+                       title="Nomor HP harus berisi 10-15 digit angka">
+                @error('no_hp')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Tempat Lahir -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="tempat_lahir">Tempat Lahir</label>
+                    <input type="text" id="tempat_lahir" name="tempat_lahir" required 
+                           placeholder="Kota/Kabupaten"
+                           value="{{ old('tempat_lahir') }}">
+                    @error('tempat_lahir')<p class="error-text">{{ $message }}</p>@enderror
+                </div>
+
+                <!-- Tanggal Lahir -->
+                <div class="form-group">
+                    <label for="tanggal_lahir">Tanggal Lahir</label>
+                    <input type="date" id="tanggal_lahir" name="tanggal_lahir" required 
+                           value="{{ old('tanggal_lahir') }}">
+                    @error('tanggal_lahir')<p class="error-text">{{ $message }}</p>@enderror
+                </div>
+            </div>
+
+            <!-- Jenis Kelamin -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="jenis_kelamin">Jenis Kelamin</label>
+                    <select id="jenis_kelamin" name="jenis_kelamin" required>
+                        <option value="">Pilih Jenis Kelamin</option>
+                        <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
+                        <option value="P" {{ old('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
+                    </select>
+                    @error('jenis_kelamin')<p class="error-text">{{ $message }}</p>@enderror
+                </div>
+
+                <!-- Agama -->
+                <div class="form-group">
+                    <label for="agama">Agama</label>
+                    <select id="agama" name="agama" required>
+                        <option value="">Pilih Agama</option>
+                        <option value="Islam" {{ old('agama') == 'Islam' ? 'selected' : '' }}>Islam</option>
+                        <option value="Kristen" {{ old('agama') == 'Kristen' ? 'selected' : '' }}>Kristen</option>
+                        <option value="Katholik" {{ old('agama') == 'Katholik' ? 'selected' : '' }}>Katholik</option>
+                        <option value="Hindu" {{ old('agama') == 'Hindu' ? 'selected' : '' }}>Hindu</option>
+                        <option value="Budha" {{ old('agama') == 'Budha' ? 'selected' : '' }}>Budha</option>
+                        <option value="Konghucu" {{ old('agama') == 'Konghucu' ? 'selected' : '' }}>Konghucu</option>
+                    </select>
+                    @error('agama')<p class="error-text">{{ $message }}</p>@enderror
+                </div>
+            </div>
+
+            <!-- Kelas -->
+            <div class="form-group">
+                <label for="id_kelas">Kelas</label>
+                <select id="id_kelas" name="id_kelas" required>
+                    <option value="">Pilih Kelas</option>
+                    @if(isset($kelas) && $kelas->count() > 0)
+                        @php $currentTingkat = null; @endphp
+                        @foreach($kelas as $item)
+                            @if($currentTingkat !== $item->tingkat)
+                                @if($currentTingkat !== null)</optgroup>@endif
+                                <optgroup label="Kelas {{ $item->tingkat }}">
+                                @php $currentTingkat = $item->tingkat; @endphp
+                            @endif
+                            <option value="{{ $item->id_kelas }}" {{ old('id_kelas') == $item->id_kelas ? 'selected' : '' }}>
+                                {{ $item->nama_kelas }} - {{ $item->jurusan }}
+                            </option>
+                        @endforeach
+                        @if($currentTingkat !== null)</optgroup>@endif
+                    @else
+                        <option value="">Tidak ada kelas tersedia</option>
+                    @endif
+                </select>
+                @error('id_kelas')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Sekolah Asal -->
+            <div class="form-group">
+                <label for="sekolah_asal">Sekolah Asal</label>
+                <input type="text" id="sekolah_asal" name="sekolah_asal" required 
+                       placeholder="Nama sekolah asal (SMP/Setara)"
+                       value="{{ old('sekolah_asal') }}">
+                <p class="hint-text">Akan otomatis terisi jika NIS ditemukan di database</p>
+                @error('sekolah_asal')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Alamat -->
+            <div class="form-group">
+                <label for="alamat">Alamat</label>
+                <textarea id="alamat" name="alamat" required 
+                          placeholder="Jalan, nomor, RT/RW, Kota, Provinsi"
+                          maxlength="500">{{ old('alamat') }}</textarea>
+                <p class="hint-text">Akan otomatis terisi jika NIS ditemukan di database</p>
+                @error('alamat')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Password -->
+            <div class="form-group has-password">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Minimal 8 karakter">
+                    <span class="password-toggle" onclick="togglePassword('password')">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+                @error('password')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <!-- Konfirmasi Password -->
+            <div class="form-group has-password">
+                <label for="password_confirmation">Konfirmasi Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password_confirmation" name="password_confirmation" required 
+                           placeholder="Ulangi password">
+                    <span class="password-toggle" onclick="togglePassword('password_confirmation')">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+                @error('password_confirmation')<p class="error-text">{{ $message }}</p>@enderror
+            </div>
+
+            <button type="submit" class="btn">Daftar Sekarang</button>
+        </form>
+
+        <div class="login-link">
+            <p>Sudah punya akun? <a href="{{ route('login') }}">Login di sini</a></p>
+            <p style="margin-top: 0.5rem;"><a href="{{ route('register.guru') }}">Daftar sebagai Guru</a></p>
+        </div>
+    </div>
+
+    @if ($errors->any())
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let errorMessages = '';
+            @foreach ($errors->all() as $error)
+                errorMessages += '• {{ $error }}\n';
+            @endforeach
+            
+            Swal.fire({
+                title: 'Terjadi Kesalahan!',
+                text: errorMessages,
+                icon: 'error',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#0369a1'
+            });
+        });
+    </script>
+    @endif
+
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'Berhasil!',
+                text: "{{ session('success') }}",
+                icon: 'success',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#0369a1',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    </script>
+    @endif
+
+    <script>
+        // Check NIS saat user selesai input
+        const nisInput = document.getElementById('nis');
+        const nameInput = document.getElementById('name');
+        const nameHint = document.getElementById('name-hint');
+        const tempatLahirInput = document.getElementById('tempat_lahir');
+        const tanggalLahirInput = document.getElementById('tanggal_lahir');
+        const jenisKelaminSelect = document.getElementById('jenis_kelamin');
+        const agamaSelect = document.getElementById('agama');
+        const idKelasSelect = document.getElementById('id_kelas');
+        const noHpInput = document.getElementById('no_hp');
+        const sekolahAsalInput = document.getElementById('sekolah_asal');
+        const alamatInput = document.getElementById('alamat');
+
+        // Event listener untuk unlock form ketika NIS diubah/dihapus
+        nisInput.addEventListener('input', function() {
+            if (this.value.length < 10) {
+                // Unlock semua field ketika NIS dihapus/diubah
+                nameInput.readOnly = false;
+                tempatLahirInput.readOnly = false;
+                tanggalLahirInput.readOnly = false;
+                jenisKelaminSelect.disabled = false;
+                agamaSelect.disabled = false;
+                idKelasSelect.disabled = false;
+                noHpInput.readOnly = false;
+                sekolahAsalInput.readOnly = false;
+                alamatInput.readOnly = false;
+                
+                nameHint.innerHTML = '';
+                nameHint.style.color = '#666';
+            }
+        });
+
+        nisInput.addEventListener('blur', function() {
+            if (this.value.length >= 10) {
+                checkNIS(this.value);
+            }
+        });
+
+        function checkNIS(nis) {
+            fetch(`/api/check-nis/${nis}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Prioritas 1: Cek apakah NIS sudah terdaftar (punya akun)
+                    if (data.already_registered) {
+                        // Kunci semua form
+                        nameInput.value = '';
+                        tempatLahirInput.value = '';
+                        tanggalLahirInput.value = '';
+                        noHpInput.value = '';
+                        sekolahAsalInput.value = '';
+                        alamatInput.value = '';
+                        jenisKelaminSelect.value = '';
+                        agamaSelect.value = '';
+                        idKelasSelect.value = '';
+                        
+                        nameInput.readOnly = true;
+                        tempatLahirInput.readOnly = true;
+                        tanggalLahirInput.readOnly = true;
+                        jenisKelaminSelect.disabled = true;
+                        agamaSelect.disabled = true;
+                        idKelasSelect.disabled = true;
+                        noHpInput.readOnly = true;
+                        sekolahAsalInput.readOnly = true;
+                        alamatInput.readOnly = true;
+                        
+                        nameHint.innerHTML = '<i class="fas fa-exclamation-circle"></i> NIS sudah terdaftar';
+                        nameHint.style.color = '#dc2626';
+                        
+                        Swal.fire({
+                            title: 'NIS Sudah Terdaftar!',
+                            text: 'NIS ini sudah pernah terdaftar. Silakan login dengan akun Anda atau hubungi admin jika ada masalah.',
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#dc2626'
+                        });
+                        
+                        return; // Stop eksekusi
+                    }
+                    
+                    // Prioritas 2: Jika ditemukan di data master dan belum terdaftar
+                    if (data.found) {
+                        const siswaData = data.data;
+                        
+                        // Auto-fill semua field dengan data dari database
+                        nameInput.value = siswaData.nama_siswa || '';
+                        tempatLahirInput.value = siswaData.tempat_lahir || '';
+                        tanggalLahirInput.value = siswaData.tanggal_lahir || '';
+                        noHpInput.value = siswaData.no_hp || '';
+                        sekolahAsalInput.value = siswaData.sekolah_asal || '';
+                        alamatInput.value = siswaData.alamat || '';
+                        
+                        // Set dropdown untuk jenis kelamin
+                        if (siswaData.jenis_kelamin) {
+                            jenisKelaminSelect.value = siswaData.jenis_kelamin;
+                        }
+                        
+                        // Set dropdown untuk agama
+                        if (siswaData.agama) {
+                            agamaSelect.value = siswaData.agama;
+                        }
+                        
+                        // Set dropdown untuk kelas
+                        if (siswaData.id_kelas) {
+                            idKelasSelect.value = siswaData.id_kelas;
+                        }
+                        
+                        // Set all fields sebagai readOnly untuk mencegah perubahan data
+                        nameInput.readOnly = true;
+                        tempatLahirInput.readOnly = true;
+                        tanggalLahirInput.readOnly = true;
+                        jenisKelaminSelect.disabled = true;
+                        agamaSelect.disabled = true;
+                        idKelasSelect.disabled = true;
+                        noHpInput.readOnly = true;
+                        sekolahAsalInput.readOnly = true;
+                        alamatInput.readOnly = true;
+                        
+                        nameHint.innerHTML = '<i class="fas fa-check-circle"></i> Data siswa ditemukan - Field otomatis terisi';
+                        nameHint.style.color = '#059669';
+                    } else {
+                        // NIS tidak ditemukan di master data, buka form untuk isi manual
+                        nameInput.readOnly = false;
+                        tempatLahirInput.readOnly = false;
+                        tanggalLahirInput.readOnly = false;
+                        jenisKelaminSelect.disabled = false;
+                        agamaSelect.disabled = false;
+                        idKelasSelect.disabled = false;
+                        noHpInput.readOnly = false;
+                        sekolahAsalInput.readOnly = false;
+                        alamatInput.readOnly = false;
+                        
+                        nameInput.value = '';
+                        tempatLahirInput.value = '';
+                        tanggalLahirInput.value = '';
+                        noHpInput.value = '';
+                        sekolahAsalInput.value = '';
+                        alamatInput.value = '';
+                        jenisKelaminSelect.value = '';
+                        agamaSelect.value = '';
+                        idKelasSelect.value = '';
+                        
+                        nameHint.innerHTML = '<i class="fas fa-info-circle"></i> NIS tidak ditemukan, silakan isi data manual';
+                        nameHint.style.color = '#666';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Error network atau server, reset form agar bisa diisi manual
+                    nameInput.readOnly = false;
+                    tempatLahirInput.readOnly = false;
+                    tanggalLahirInput.readOnly = false;
+                    jenisKelaminSelect.disabled = false;
+                    agamaSelect.disabled = false;
+                    idKelasSelect.disabled = false;
+                    noHpInput.readOnly = false;
+                    sekolahAsalInput.readOnly = false;
+                    alamatInput.readOnly = false;
+                    
+                    nameHint.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error saat mengecek NIS. Silakan isi data manual.';
+                    nameHint.style.color = '#dc2626';
+                });
+        }
+
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggle = event.target.closest('.password-toggle');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                passwordField.type = 'password';
+                toggle.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Register - MSBD System</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/yapim.png?v=' . time() . '\)') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 50%, #14b8a6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .register-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 450px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .register-header h1 {
+            color: #0369a1;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .register-header p {
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.85rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .form-group input::placeholder, .form-group select::placeholder {
+            color: #999;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #0369a1;
+            box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+        }
+        .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2.5rem;
+        }
+        .btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(3, 105, 161, 0.3);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .login-link a {
+            color: #0369a1;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        .login-link a:hover {
+            color: #06b6d4;
+            text-decoration: underline;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .password-wrapper {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            font-size: 1.1rem;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .password-toggle:hover {
+            color: #0369a1;
+        }
+        .form-group.has-password input {
+            padding-right: 2.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="logo-container">
+            <img src="{{ asset('images/yapim.png') }}" alt="Logo MSBD">
+        </div>
+        <div class="register-header">
+            <h1>Register</h1>
+            <p>Daftar Akun Baru</p>
+        </div>
+
+        <form method="POST" action="{{ route('register') }}">
+            @csrf
+
+            <div class="form-group">
+                <label for="name">Nama Lengkap</label>
+                <input type="text" id="name" name="name" value="{{ old('name') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ old('email') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" name="role" required onchange="toggleKelasField()">
+                    <option value="">Pilih Role</option>
+                    <option value="guru" {{ old('role') == 'guru' ? 'selected' : '' }}>Guru</option>
+                    <option value="siswa" {{ old('role') == 'siswa' ? 'selected' : '' }}>Siswa</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="nisn-field" style="display: none;">
+                <label for="nisn">NISN (Nomor Induk Siswa Nasional)</label>
+                <input type="text" id="nisn" name="nisn" value="{{ old('nisn') }}" placeholder="Contoh: 0123456789">
+            </div>
+
+            <div class="form-group" id="kelas-field" style="display: none;">
+                <label for="id_kelas">Kelas</label>
+                <select id="id_kelas" name="id_kelas">
+                    <option value="">Pilih Kelas</option>
+                    @if(isset($kelas) && $kelas->count() > 0)
+                        @php
+                            $currentTingkat = null;
+                        @endphp
+                        @foreach($kelas as $item)
+                            @if($currentTingkat !== $item->tingkat)
+                                @if($currentTingkat !== null)
+                                    </optgroup>
+                                @endif
+                                <optgroup label="Kelas {{ $item->tingkat }}">
+                                @php
+                                    $currentTingkat = $item->tingkat;
+                                @endphp
+                            @endif
+                            <option value="{{ $item->id_kelas }}" {{ old('id_kelas') == $item->id_kelas ? 'selected' : '' }}>
+                                {{ $item->nama_kelas }} - {{ $item->jurusan }}
+                            </option>
+                        @endforeach
+                        @if($currentTingkat !== null)
+                            </optgroup>
+                        @endif
+                    @else
+                        <option value="">Tidak ada kelas tersedia</option>
+                    @endif
+                </select>
+            </div>
+
+            <div class="form-group" id="nip-field" style="display: none;">
+                <label for="nip">NIP (Nomor Induk Pegawai)</label>
+                <input type="text" id="nip" name="nip" value="{{ old('nip') }}" placeholder="Contoh: 123456789012345678">
+            </div>
+
+            <div class="form-group has-password">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required placeholder="Minimal 8 karakter">
+                    <span class="password-toggle" onclick="togglePassword('password')">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+
+            <div class="form-group has-password">
+                <label for="password_confirmation">Konfirmasi Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password_confirmation" name="password_confirmation" required placeholder="Ulangi password">
+                    <span class="password-toggle" onclick="togglePassword('password_confirmation')">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn">Register</button>
+        </form>
+
+        <div class="login-link">
+            <p>Sudah punya akun? <a href="{{ route('login') }}">Login di sini</a></p>
+        </div>
+    </div>
+
+    @if ($errors->any())
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let errorMessages = '';
+            @foreach ($errors->all() as $error)
+                errorMessages += '{{ $error }}<br>';
+            @endforeach
+            
+            Swal.fire({
+                title: 'Terjadi Kesalahan!',
+                html: errorMessages,
+                icon: 'error',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#0369a1'
+            });
+        });
+    </script>
+    @endif
+
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'Berhasil!',
+                text: "{{ session('success') }}",
+                icon: 'success',
+                confirmButtonText: 'Oke',
+                confirmButtonColor: '#0369a1',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    </script>
+    @endif
+
+    <script>
+        // Toggle field kelas, NISN, dan NIP berdasarkan role yang dipilih
+        function toggleKelasField() {
+            const role = document.getElementById('role').value;
+            const kelasField = document.getElementById('kelas-field');
+            const nisnField = document.getElementById('nisn-field');
+            const nipField = document.getElementById('nip-field');
+            const kelasSelect = document.getElementById('id_kelas');
+            const nisnInput = document.getElementById('nisn');
+            const nipInput = document.getElementById('nip');
+            
+            if (role === 'siswa') {
+                kelasField.style.display = 'block';
+                nisnField.style.display = 'block';
+                nipField.style.display = 'none';
+                
+                kelasSelect.setAttribute('required', 'required');
+                nisnInput.setAttribute('required', 'required');
+                nipInput.removeAttribute('required');
+                nipInput.value = ''; // Reset NIP
+            } else if (role === 'guru') {
+                kelasField.style.display = 'none';
+                nisnField.style.display = 'none';
+                nipField.style.display = 'block';
+                
+                kelasSelect.removeAttribute('required');
+                nisnInput.removeAttribute('required');
+                nipInput.setAttribute('required', 'required');
+                kelasSelect.value = ''; // Reset pilihan kelas
+                nisnInput.value = ''; // Reset NISN
+            } else {
+                kelasField.style.display = 'none';
+                nisnField.style.display = 'none';
+                nipField.style.display = 'none';
+                
+                kelasSelect.removeAttribute('required');
+                nisnInput.removeAttribute('required');
+                nipInput.removeAttribute('required');
+                kelasSelect.value = '';
+                nisnInput.value = '';
+                nipInput.value = '';
+            }
+        }
+
+        // Jalankan saat halaman dimuat untuk handle old() value
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleKelasField();
+        });
+
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggle = event.target.closest('.password-toggle');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                passwordField.type = 'password';
+                toggle.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Reset Password - MSBD System</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/yapim.png?v=' . time() . '\)') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 50%, #14b8a6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .reset-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 450px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .reset-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .reset-header h1 {
+            color: #0369a1;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .reset-header p {
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .input-group {
+            position: relative;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.85rem 2.5rem 0.85rem 0.85rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .input-group input::placeholder {
+            color: #999;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #0369a1;
+            box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+        }
+        .toggle-password {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 1rem;
+            transition: color 0.3s;
+            padding: 0.5rem;
+        }
+        .toggle-password:hover {
+            color: #0369a1;
+        }
+        .password-strength {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+        }
+        .strength-bar {
+            flex: 1;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s;
+            background: #ef4444;
+        }
+        .strength-text {
+            font-size: 0.85rem;
+            color: #666;
+            min-width: 80px;
+        }
+        .strength-text.weak {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .strength-text.fair {
+            color: #f97316;
+            font-weight: 600;
+        }
+        .strength-text.good {
+            color: #eab308;
+            font-weight: 600;
+        }
+        .strength-text.strong {
+            color: #22c55e;
+            font-weight: 600;
+        }
+        .requirement-list {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .requirement-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+        .requirement-item:last-child {
+            margin-bottom: 0;
+        }
+        .requirement-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            background: #e0e0e0;
+            color: #666;
+        }
+        .requirement-icon.met {
+            background: #22c55e;
+            color: white;
+        }
+        .btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1.5rem;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(3, 105, 161, 0.3);
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .login-link a {
+            color: #0369a1;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        .login-link a:hover {
+            color: #06b6d4;
+            text-decoration: underline;
+        }
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #0369a1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="reset-container">
+        <div class="logo-container">
+            <img src="{{ asset('images/yapim.png') }}" alt="Logo MSBD">
+        </div>
+        <div class="reset-header">
+            <h1>Reset Password</h1>
+            <p>Buat password baru yang kuat untuk akun Anda</p>
+        </div>
+
+        <form id="resetForm" onsubmit="handleResetPassword(event)">
+            @csrf
+            <input type="hidden" name="token" value="{{ $token }}">
+
+            <div class="form-group">
+                <label for="password">Password Baru</label>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Masukkan password baru"
+                           onchange="updatePasswordStrength()"
+                           oninput="updatePasswordStrength()">
+                    <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="password-strength">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <span class="strength-text" id="strengthText">Masukkan password</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password_confirmation">Konfirmasi Password</label>
+                <div class="input-group">
+                    <input type="password" id="password_confirmation" name="password_confirmation" required 
+                           placeholder="Konfirmasi password"
+                           oninput="checkPasswordMatch()">
+                    <button type="button" class="toggle-password" onclick="togglePassword('password_confirmation')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="requirement-list">
+                <div class="requirement-item">
+                    <div class="requirement-icon" id="req-length">✓</div>
+                    <span>Minimal 8 karakter</span>
+                </div>
+                <div class="requirement-item">
+                    <div class="requirement-icon" id="req-upper">✓</div>
+                    <span>Minimal 1 huruf besar (A-Z)</span>
+                </div>
+                <div class="requirement-item">
+                    <div class="requirement-icon" id="req-lower">✓</div>
+                    <span>Minimal 1 huruf kecil (a-z)</span>
+                </div>
+                <div class="requirement-item">
+                    <div class="requirement-icon" id="req-number">✓</div>
+                    <span>Minimal 1 angka (0-9)</span>
+                </div>
+                <div class="requirement-item">
+                    <div class="requirement-icon" id="req-match">✓</div>
+                    <span>Password cocok dengan konfirmasi</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">
+                <span id="btnText">Reset Password</span>
+                <div class="loading-spinner" id="spinner"></div>
+            </button>
+        </form>
+
+        <div class="login-link">
+            <p><a href="{{ route('login') }}"><i class="fas fa-arrow-left"></i> Kembali ke Login</a></p>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const button = event.currentTarget;
+            const icon = button.querySelector('i');
+
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function updatePasswordStrength() {
+            const password = document.getElementById('password').value;
+            let strength = 0;
+
+            // Check requirements
+            const hasLength = password.length >= 8;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+
+            // Update requirement indicators
+            updateRequirement('req-length', hasLength);
+            updateRequirement('req-upper', hasUpper);
+            updateRequirement('req-lower', hasLower);
+            updateRequirement('req-number', hasNumber);
+
+            // Calculate strength
+            if (hasLength) strength++;
+            if (hasUpper) strength++;
+            if (hasLower) strength++;
+            if (hasNumber) strength++;
+
+            // Update strength display
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+
+            const fillPercentage = (strength / 4) * 100;
+            strengthFill.style.width = fillPercentage + '%';
+
+            let label = 'Lemah';
+            let color = '#ef4444';
+            let className = 'weak';
+
+            if (strength === 0) {
+                label = 'Masukkan password';
+                className = '';
+            } else if (strength === 1) {
+                label = 'Lemah';
+                className = 'weak';
+            } else if (strength === 2) {
+                label = 'Cukup';
+                color = '#f97316';
+                className = 'fair';
+            } else if (strength === 3) {
+                label = 'Baik';
+                color = '#eab308';
+                className = 'good';
+            } else if (strength === 4) {
+                label = 'Kuat';
+                color = '#22c55e';
+                className = 'strong';
+            }
+
+            strengthText.textContent = label;
+            strengthText.className = 'strength-text ' + className;
+            strengthFill.style.background = color;
+
+            checkPasswordMatch();
+        }
+
+        function updateRequirement(id, met) {
+            const element = document.getElementById(id);
+            if (met) {
+                element.classList.add('met');
+                element.innerHTML = '<i class="fas fa-check"></i>';
+            } else {
+                element.classList.remove('met');
+                element.innerHTML = '✓';
+            }
+        }
+
+        function checkPasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('password_confirmation').value;
+            const match = password && confirm && password === confirm;
+
+            updateRequirement('req-match', match);
+        }
+
+        function validatePassword() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('password_confirmation').value;
+
+            // All requirements
+            const hasLength = password.length >= 8;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const match = password === confirm;
+
+            return hasLength && hasUpper && hasLower && hasNumber && match;
+        }
+
+        function handleResetPassword(event) {
+            event.preventDefault();
+
+            if (!validatePassword()) {
+                Swal.fire({
+                    title: 'Validasi!',
+                    text: 'Password tidak memenuhi semua kriteria',
+                    icon: 'warning',
+                    confirmButtonColor: '#0369a1'
+                });
+                return;
+            }
+
+            const password = document.getElementById('password').value;
+            const token = document.querySelector('input[name="token"]').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btnText');
+
+            // Show loading
+            submitBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            btnText.textContent = 'Memproses...';
+
+            const passwordConfirm = document.getElementById('password_confirmation').value;
+
+            fetch('{{ route("reset-password.submit") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    token: token,
+                    password: password,
+                    password_confirmation: passwordConfirm
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: data.message || 'Password telah direset. Silakan login dengan password baru.',
+                        icon: 'success',
+                        confirmButtonColor: '#0369a1',
+                        confirmButtonText: 'Login Sekarang'
+                    }).then(() => {
+                        window.location.href = '{{ route("login") }}';
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Gagal!',
+                        text: data.message || 'Terjadi kesalahan',
+                        icon: 'error',
+                        confirmButtonColor: '#0369a1'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Terjadi kesalahan jaringan',
+                    icon: 'error',
+                    confirmButtonColor: '#0369a1'
+                });
+            })
+            .finally(() => {
+                // Hide loading
+                submitBtn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = 'Reset Password';
+            });
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePasswordStrength();
+        });
+    </script>
+</body>
+</html>
+<x-guest-layout>
+    <form method="POST" action="{{ route('password.store') }}">
+        @csrf
+
+        <!-- Password Reset Token -->
+        <input type="hidden" name="token" value="{{ $request->route('token') }}">
+
+        <!-- Email Address -->
+        <div>
+            <x-input-label for="email" :value="__('Email')" />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" />
+            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
+
+        <!-- Password -->
+        <div class="mt-4">
+            <x-input-label for="password" :value="__('Password')" />
+            <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
+            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="mt-4">
+            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+
+            <x-text-input id="password_confirmation" class="block mt-1 w-full"
+                                type="password"
+                                name="password_confirmation" required autocomplete="new-password" />
+
+            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+        </div>
+
+        <div class="flex items-center justify-end mt-4">
+            <x-primary-button>
+                {{ __('Reset Password') }}
+            </x-primary-button>
+        </div>
+    </form>
+</x-guest-layout>
+<x-guest-layout>
+    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
+    </div>
+
+    @if (session('status') == 'verification-link-sent')
+        <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
+            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+        </div>
+    @endif
+
+    <div class="mt-4 flex items-center justify-between">
+        <form method="POST" action="{{ route('verification.send') }}">
+            @csrf
+
+            <div>
+                <x-primary-button>
+                    {{ __('Resend Verification Email') }}
+                </x-primary-button>
+            </div>
+        </form>
+
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+
+            <button type="submit" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
+                {{ __('Log Out') }}
+            </button>
+        </form>
+    </div>
+</x-guest-layout>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Verifikasi OTP - MSBD System</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/yapim.png?v=' . time() . '\)') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 50%, #14b8a6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .verify-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 450px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .verify-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .verify-header h1 {
+            color: #0369a1;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .verify-header p {
+            color: #666;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        .phone-info {
+            background: #f0f9ff;
+            border: 1px solid #7dd3fc;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #0369a1;
+            font-size: 0.95rem;
+        }
+        .phone-info strong {
+            display: block;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+        .timer {
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .timer .time {
+            display: inline-block;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            color: #856404;
+            font-weight: 600;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .otp-input {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .otp-input input {
+            width: 100%;
+            height: 3rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-family: monospace;
+        }
+        .otp-input input:focus {
+            outline: none;
+            border-color: #0369a1;
+            box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+        }
+        .otp-input input::placeholder {
+            color: #ccc;
+        }
+        .form-group textarea {
+            width: 100%;
+            padding: 0.85rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-family: monospace;
+            resize: none;
+            height: 60px;
+        }
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #0369a1;
+            box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+        }
+        .btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #0369a1 0%, #06b6d4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 0.5rem;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(3, 105, 161, 0.3);
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            margin-top: 0.5rem;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            box-shadow: 0 10px 25px rgba(100, 116, 139, 0.3);
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .login-link a {
+            color: #0369a1;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        .login-link a:hover {
+            color: #06b6d4;
+            text-decoration: underline;
+        }
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #0369a1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .info-box {
+            background: #f5f5f5;
+            border-left: 4px solid #0369a1;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .info-box i {
+            margin-right: 0.5rem;
+            color: #0369a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <div class="logo-container">
+            <img src="{{ asset('images/yapim.png') }}" alt="Logo MSBD">
+        </div>
+        <div class="verify-header">
+            <h1>Verifikasi OTP</h1>
+            <p>Masukkan kode OTP yang dikirim ke WhatsApp</p>
+        </div>
+
+        <div class="phone-info">
+            <i class="fas fa-mobile-alt"></i>
+            Kode dikirim ke
+            <strong>{{ $phoneNumber ?? '**' }}</strong>
+        </div>
+
+        <div class="timer">
+            Kode OTP berlaku selama:
+            <div class="time">
+                <i class="fas fa-hourglass-end"></i>
+                <span id="timerDisplay">10:00</span>
+            </div>
+        </div>
+
+        <form id="verifyForm" onsubmit="handleVerifyOtp(event)">
+            @csrf
+            <input type="hidden" name="token" value="{{ $token }}">
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Masukkan 6 digit OTP atau paste seluruh kode di bawah
+            </div>
+
+            <div class="form-group">
+                <label>Kode OTP (6 Digit)</label>
+                <div class="otp-input" id="otpInputContainer">
+                    <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" placeholder="0">
+                    <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" placeholder="0">
+                    <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" placeholder="0">
+                    <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" placeholder="0">
+                    <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" placeholder="0">
+                    <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" placeholder="0">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Atau Paste Kode Lengkap</label>
+                <textarea id="otpPaste" placeholder="Paste OTP 6 digit di sini"></textarea>
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">
+                <span id="btnText">Verifikasi OTP</span>
+                <div class="loading-spinner" id="spinner"></div>
+            </button>
+        </form>
+
+        <div class="login-link">
+            <p>
+                <a href="{{ route('forgot-password') }}">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Timer functionality
+        function startTimer() {
+            let timeLeft = 10 * 60; // 10 minutes
+            const display = document.getElementById('timerDisplay');
+
+            const interval = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                display.textContent = 
+                    String(minutes).padStart(2, '0') + ':' +
+                    String(seconds).padStart(2, '0');
+
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    document.getElementById('submitBtn').disabled = true;
+                    Swal.fire({
+                        title: 'OTP Expired',
+                        text: 'Waktu verifikasi OTP telah habis',
+                        icon: 'error',
+                        confirmButtonColor: '#0369a1'
+                    }).then(() => {
+                        window.location.href = '{{ route("forgot-password") }}';
+                    });
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        // Auto-move between OTP inputs
+        document.querySelectorAll('.otp-digit').forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value && index < 5) {
+                    document.querySelectorAll('.otp-digit')[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !input.value && index > 0) {
+                    document.querySelectorAll('.otp-digit')[index - 1].focus();
+                }
+            });
+        });
+
+        // Handle paste functionality
+        document.getElementById('otpPaste').addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            const digits = pastedText.replace(/\D/g, '').slice(0, 6);
+
+            if (digits.length === 6) {
+                digits.split('').forEach((digit, index) => {
+                    document.querySelectorAll('.otp-digit')[index].value = digit;
+                });
+                document.querySelectorAll('.otp-digit')[5].focus();
+            }
+        });
+
+        function handleVerifyOtp(event) {
+            event.preventDefault();
+
+            // Get OTP from individual inputs
+            let otp = Array.from(document.querySelectorAll('.otp-digit'))
+                .map(input => input.value)
+                .join('');
+
+            // Or from paste textarea
+            if (!otp || otp.length !== 6) {
+                const pastedOtp = document.getElementById('otpPaste').value.replace(/\D/g, '');
+                otp = pastedOtp.slice(0, 6);
+            }
+
+            if (!otp || otp.length !== 6) {
+                Swal.fire({
+                    title: 'Validasi!',
+                    text: 'Silakan masukkan 6 digit OTP',
+                    icon: 'warning',
+                    confirmButtonColor: '#0369a1'
+                });
+                return;
+            }
+
+            const token = document.querySelector('input[name="token"]').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btnText');
+
+            // Show loading
+            submitBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            btnText.textContent = 'Memverifikasi...';
+
+            fetch('{{ route("forgot-password.verify-otp") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    token: token,
+                    otp: otp
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: 'OTP terverifikasi. Silakan buat password baru.',
+                        icon: 'success',
+                        confirmButtonColor: '#0369a1',
+                        confirmButtonText: 'Lanjutkan'
+                    }).then(() => {
+                        window.location.href = `/reset-password/${token}`;
+                    });
+                } else {
+                    const message = data.message || 'OTP tidak valid';
+                    const attemptsLeft = data.attempts_left;
+
+                    let errorText = message;
+                    if (attemptsLeft !== undefined && attemptsLeft > 0) {
+                        errorText += `\n\nSisa percobaan: ${attemptsLeft}/5`;
+                    }
+
+                    Swal.fire({
+                        title: 'Gagal!',
+                        text: errorText,
+                        icon: 'error',
+                        confirmButtonColor: '#0369a1'
+                    });
+
+                    // Clear inputs
+                    document.querySelectorAll('.otp-digit').forEach(input => input.value = '');
+                    document.getElementById('otpPaste').value = '';
+                    document.querySelectorAll('.otp-digit')[0].focus();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Terjadi kesalahan jaringan',
+                    icon: 'error',
+                    confirmButtonColor: '#0369a1'
+                });
+            })
+            .finally(() => {
+                // Hide loading
+                submitBtn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = 'Verifikasi OTP';
+            });
+        }
+
+        // Start timer on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            startTimer();
+            document.querySelectorAll('.otp-digit')[0].focus();
+        });
+    </script>
+</body>
+</html>
