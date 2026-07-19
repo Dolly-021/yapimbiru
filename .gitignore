@@ -1,6 +1,10 @@
 *.log
 .DS_Store
 .env
+
+# Sembunyikan composer dari Hostinger (supaya tidak auto composer install)
+composer.json
+composer.lock
 .env.backup
 .env.production
 .phpactor.json
