@@ -308,5 +308,8 @@
     @include('partials.alerts')
 
     @yield('scripts')
+
+    {{-- Chatbot Bubble --}}
+    @include('partials.chatbot')
 </body>
 </html>

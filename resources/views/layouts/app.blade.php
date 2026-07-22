@@ -52,5 +52,8 @@
                 {{ $slot }}
             </main>
         </div>
+
+        {{-- Chatbot Bubble --}}
+        @include('partials.chatbot')
     </body>
 </html>

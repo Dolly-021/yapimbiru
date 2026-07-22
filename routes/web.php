@@ -8,6 +8,7 @@ use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\KepalaSekolahController;
 use App\Http\Controllers\PembinaController;
 use App\Http\Controllers\IzinController;
+use App\Http\Controllers\ChatController;
 
 Route::get('/', function () {
     return view('homepage');
@@ -38,6 +39,9 @@ Route::get('/api/check-nis/{nis}', [AuthController::class, 'checkNis'])->name('a
 
 // API Route untuk get jadwal by kelas dan hari
 Route::get('/api/jadwal', [SiswaController::class, 'getJadwal'])->middleware('auth')->name('api.jadwal');
+
+// API Route chatbot — forward ke Groq (GROQ_API_KEY di .env)
+Route::post('/api/chat', [ChatController::class, 'chat'])->name('api.chat');
 
 // Legacy register route (redirect ke pilihan)
 Route::get('/register', function() {
