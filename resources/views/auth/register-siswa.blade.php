@@ -358,14 +358,13 @@
                 @error('id_kelas')<p class="error-text">{{ $message }}</p>@enderror
             </div>
 
-            <!-- Semester (Hidden field - auto-filled) -->
-            <input type="hidden" id="semester" name="semester" value="">
+            <!-- Semester (Sekarang bisa diedit) -->
             <div class="form-group">
-                <label>Semester</label>
-                <div style="padding: 0.85rem; border: 2px solid #e0e0e0; border-radius: 8px; background: #f9fafb; color: #666; font-size: 0.95rem;">
-                    <span id="semester-display">Akan terisi otomatis sesuai kelas</span>
-                </div>
-                <p class="hint-text">Semester akan otomatis terisi berdasarkan data master siswa</p>
+                <label for="semester">Semester</label>
+                <input type="text" id="semester" name="semester" required 
+                       placeholder="Contoh: X Semester Ganjil 2025/2026"
+                       value="{{ old('semester') }}">
+                <p class="hint-text">Semester otomatis terisi dari kelas, tapi <b>silakan diubah</b> jika tidak sesuai dengan semester saat ini.</p>
                 @error('semester')<p class="error-text">{{ $message }}</p>@enderror
             </div>
 
@@ -585,14 +584,16 @@
                         jenisKelaminSelect.style.opacity = '0.6';
                         agamaSelect.style.pointerEvents = 'none';
                         agamaSelect.style.opacity = '0.6';
-                        idKelasSelect.style.pointerEvents = 'none';
-                        idKelasSelect.style.opacity = '0.6';
+                        
+                        // Kelas dan semester dibiarkan terbuka (bisa diubah) untuk kenaikan kelas
+                        idKelasSelect.style.pointerEvents = 'auto';
+                        idKelasSelect.style.opacity = '1';
                         
                         noHpInput.readOnly = false; // Biarkan user edit nomor HP
                         sekolahAsalInput.readOnly = true;
                         alamatInput.readOnly = true;
                         
-                        nameHint.innerHTML = '<i class="fas fa-check-circle"></i> Data siswa ditemukan - Field otomatis terisi';
+                        nameHint.innerHTML = '<i class="fas fa-check-circle"></i> Data ditemukan. <b>Penting:</b> Silakan perbarui Kelas dan Semester ke tahun ajaran baru.';
                         nameHint.style.color = '#059669';
                     } else {
                         // NIS tidak ditemukan di master data, buka form untuk isi manual
@@ -656,16 +657,13 @@
             }
         }
 
-        // Function untuk auto-fill semester berdasarkan kelas
         function autoFillSemester() {
             const kelasSelect = document.getElementById('id_kelas');
             const selectedOption = kelasSelect.options[kelasSelect.selectedIndex];
             const semesterInput = document.getElementById('semester');
-            const semesterDisplay = document.getElementById('semester-display');
             
             if (!selectedOption.value) {
-                semesterInput.value = '';
-                semesterDisplay.textContent = 'Akan terisi otomatis sesuai kelas';
+                if(!semesterInput.value) semesterInput.value = '';
                 return;
             }
             
@@ -673,18 +671,15 @@
             let semesterValue = '';
             
             // Deteksi tingkat dari teks kelas
-            // Semua siswa yang registrasi di 2025/2026 mengikuti periode 2025/2026
             if (selectedText.includes('XII')) {
                 semesterValue = 'XII Semester Ganjil 2025/2026';
-                semesterDisplay.textContent = semesterValue;
             } else if (selectedText.includes('XI')) {
                 semesterValue = 'XI Semester Ganjil 2025/2026';
-                semesterDisplay.textContent = semesterValue;
             } else if (selectedText.includes('X')) {
                 semesterValue = 'X Semester Ganjil 2025/2026';
-                semesterDisplay.textContent = semesterValue;
             }
             
+            // Set value input agar bisa diedit user
             semesterInput.value = semesterValue;
         }
         
