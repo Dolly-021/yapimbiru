@@ -219,96 +219,159 @@
 let jamMasukDicatat = null;
 
 function absenMasuk() {
-    // Ambil waktu dari browser
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
-    const jamBrowser = `${hours}:${minutes}:${seconds}`;
-    
-    // Step 1: Tampilkan popup konfirmasi dengan jam dari BROWSER
+    if (!navigator.geolocation) {
+        Swal.fire('Error', 'Browser Anda tidak mendukung fitur lokasi (GPS).', 'error');
+        return;
+    }
+
+    // Step 1: Minta izin lokasi
     Swal.fire({
-        title: 'Konfirmasi Absen Masuk',
-        text: `Anda akan absen masuk pada jam ${jamBrowser}. Lanjutkan?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Absen Masuk',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Simpan jam masuk ke variabel global
-            jamMasukDicatat = jamBrowser;
-            
-            // Step 2: User sudah setuju, sekarang benar-benar absen
-            Swal.fire({
-                title: 'Mengirim...',
-                text: 'Memproses absen masuk...',
-                icon: 'info',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            fetch('{{ route("guru.absen-masuk") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken || ''
-                },
-                body: JSON.stringify({})
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Absen Masuk Response:', data);
-                
-                if (data.success) {
-                    // Update stat card Jam Masuk Hari Ini
-                    const jamMasukCard = document.querySelector('.stat-card:nth-child(1) .stat-value');
-                    if (jamMasukCard) {
-                        jamMasukCard.textContent = jamMasukDicatat;
-                    }
-                    
-                    // Update badge info dengan jam yang disimpan
-                    const infoBadge = document.querySelector('[data-absen-info]');
-                    if (infoBadge) {
-                        infoBadge.innerHTML = `<span class="badge bg-warning text-dark">Masuk: ${jamMasukDicatat} | Silakan absen keluar</span>`;
-                    }
-                    
-                    // Update tombol berdasarkan ID
-                    const masukBtn = document.getElementById('btnAbsenMasuk');
-                    const keluarBtn = document.getElementById('btnAbsenKeluar');
-                    
-                    if (masukBtn) {
-                        masukBtn.disabled = true;
-                        masukBtn.style.opacity = '0.6';
-                        masukBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> ✓ Sudah Absen Masuk';
-                    }
-                    
-                    if (keluarBtn) {
-                        keluarBtn.disabled = false;
-                        keluarBtn.style.opacity = '1';
-                        keluarBtn.onclick = function() { absenKeluar(); };
-                        keluarBtn.classList.remove('btn-secondary');
-                        keluarBtn.classList.add('btn-warning');
-                    }
-                    
-                    Swal.fire({
-                        title: 'Berhasil!',
-                        text: `✅ Absen masuk berhasil dicatat pada jam ${jamMasukDicatat}`,
-                        icon: 'success'
-                    });
-                } else {
-                    Swal.fire('Gagal!', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Gagal!', 'Terjadi kesalahan: ' + error.message, 'error');
-            });
+        title: 'Mencari Lokasi...',
+        text: 'Mohon izinkan akses lokasi pada browser Anda.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
         }
+    });
+
+    navigator.geolocation.getCurrentPosition(
+        async function(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            
+            // Ambil alamat dari koordinat (Reverse Geocoding via OpenStreetMap)
+            let alamatLengkap = `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`;
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                const data = await response.json();
+                if (data && data.display_name) {
+                    alamatLengkap = data.display_name;
+                }
+            } catch (e) {
+                console.error("Gagal mengambil alamat:", e);
+            }
+            
+            Swal.close();
+            
+            // Step 2: Lokasi berhasil didapat, minta foto bukti
+            Swal.fire({
+                title: 'Bukti Kehadiran',
+                html: `
+                    <div class="mb-3 text-left">
+                        <label for="fotoAbsen" class="form-label" style="font-weight: bold; display: block; text-align: left; margin-bottom: 8px;">Upload Foto Anda Saat Ini</label>
+                        <input type="file" id="fotoAbsen" class="form-control" accept="image/*" capture="user" style="display: block; width: 100%;">
+                        <small class="text-muted d-block mt-2 text-left">*Wajib mengupload foto sebagai bukti kehadiran</small>
+                    </div>
+                    <div class="mt-3 text-sm text-gray-500" style="text-align: left; background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                        <i class="fas fa-map-marker-alt text-danger"></i> <strong>Lokasi Tercatat:</strong><br>
+                        ${alamatLengkap}
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Kirim Absen',
+                cancelButtonText: 'Batal',
+                preConfirm: () => {
+                    const fotoInput = document.getElementById('fotoAbsen');
+                    if (!fotoInput.files || fotoInput.files.length === 0) {
+                        Swal.showValidationMessage('Foto bukti kehadiran wajib diupload!');
+                        return false;
+                    }
+                    return {
+                        foto: fotoInput.files[0],
+                        latitude: latitude,
+                        longitude: longitude,
+                        alamat: alamatLengkap
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    kirimDataAbsen(result.value);
+                }
+            });
+        },
+        function(error) {
+            let msg = 'Gagal mendapatkan lokasi.';
+            if (error.code === error.PERMISSION_DENIED) {
+                msg = 'Anda menolak akses lokasi. Absen tidak dapat dilakukan tanpa lokasi aktif.';
+            }
+            Swal.fire('Akses Ditolak', msg, 'error');
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+function kirimDataAbsen(data) {
+    Swal.fire({
+        title: 'Mengirim Data...',
+        text: 'Memproses absen dan mengupload foto...',
+        icon: 'info',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    // Gunakan FormData karena ada file upload
+    const formData = new FormData();
+    formData.append('foto', data.foto);
+    formData.append('latitude', data.latitude);
+    formData.append('longitude', data.longitude);
+    formData.append('alamat', data.alamat || '');
+    
+    fetch('{{ route("guru.absen-masuk") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken || ''
+            // Jangan set Content-Type untuk FormData, biarkan browser yang atur boundary
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(response => {
+        if (response.success) {
+            // Update UI (status jam masuk)
+            jamMasukDicatat = response.jam_masuk;
+            
+            const infoBadge = document.querySelector('[data-absen-info]');
+            if (infoBadge) {
+                infoBadge.innerHTML = `<span class="badge bg-warning text-dark">Masuk: ${response.jam_masuk} | Silakan absen keluar</span>`;
+            }
+            
+            const masukBtn = document.getElementById('btnAbsenMasuk');
+            const keluarBtn = document.getElementById('btnAbsenKeluar');
+            
+            if (masukBtn) {
+                masukBtn.disabled = true;
+                masukBtn.style.opacity = '0.6';
+                masukBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> ✓ Sudah Absen Masuk';
+            }
+            
+            if (keluarBtn) {
+                keluarBtn.disabled = false;
+                keluarBtn.style.opacity = '1';
+                keluarBtn.onclick = function() { absenKeluar(); };
+                keluarBtn.classList.remove('btn-secondary');
+                keluarBtn.classList.add('btn-warning');
+            }
+            
+            Swal.fire({
+                title: 'Berhasil!',
+                text: response.message,
+                icon: 'success'
+            });
+        } else {
+            Swal.fire('Gagal!', response.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Gagal!', 'Terjadi kesalahan saat memproses absen.', 'error');
     });
 }
 

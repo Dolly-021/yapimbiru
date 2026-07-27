@@ -319,6 +319,7 @@
                     <th>Jam Masuk</th>
                     <th>Jam Keluar</th>
                     <th>Status</th>
+                    <th>Lokasi & Foto</th>
                     <th>Keterangan</th>
                 </tr>
             </thead>
@@ -344,6 +345,27 @@
                         <span class="badge badge-{{ $p->status }}">
                             {{ ucfirst($p->status) }}
                         </span>
+                    </td>
+                    <td>
+                        @if($p->latitude && $p->longitude)
+                            @if($p->alamat)
+                                <div style="font-size: 0.8rem; color: #374151; margin-bottom: 0.25rem; line-height: 1.4;">
+                                    <i class="fas fa-map-marker-alt" style="color: #dc2626;"></i>
+                                    {{ Str::limit($p->alamat, 80) }}
+                                    <a href="https://maps.google.com/?q={{ $p->latitude }},{{ $p->longitude }}" target="_blank" style="color: #2563eb; font-size: 0.75rem; margin-left: 4px;">↗</a>
+                                </div>
+                            @else
+                                <a href="https://maps.google.com/?q={{ $p->latitude }},{{ $p->longitude }}" target="_blank" style="font-size: 0.8rem; text-decoration: none; color: #dc2626; display: block; margin-bottom: 0.25rem;"><i class="fas fa-map-marker-alt"></i> Maps</a>
+                            @endif
+                        @else
+                            <span style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">No GPS</span>
+                        @endif
+
+                        @if($p->foto_absen_masuk)
+                            <a href="{{ asset('storage/foto_absen/' . $p->foto_absen_masuk) }}" target="_blank" style="font-size: 0.8rem; text-decoration: none; color: #2563eb; display: block;"><i class="fas fa-image"></i> Lihat Foto</a>
+                        @else
+                            <span style="font-size: 0.8rem; color: #94a3b8; display: block;">No Foto</span>
+                        @endif
                     </td>
                     <td>{{ $p->keterangan ?? '-' }}</td>
                 </tr>

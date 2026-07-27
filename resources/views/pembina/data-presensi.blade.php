@@ -86,6 +86,7 @@
                                 <th style="padding: 1rem; text-align: left; font-weight: 600; color: #2d3748;">Jam Masuk</th>
                                 <th style="padding: 1rem; text-align: left; font-weight: 600; color: #2d3748;">Jam Pulang</th>
                                 <th style="padding: 1rem; text-align: left; font-weight: 600; color: #2d3748;">Status</th>
+                                <th style="padding: 1rem; text-align: left; font-weight: 600; color: #2d3748;">Lokasi & Foto</th>
                             @else
                                 <th style="padding: 1rem; text-align: left; font-weight: 600; color: #2d3748;">NIS</th>
                                 <th style="padding: 1rem; text-align: left; font-weight: 600; color: #2d3748;">Nama Siswa</th>
@@ -106,7 +107,7 @@
                                     </td>
                                     <td style="padding: 1rem; color: #718096;">{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
                                     <td style="padding: 1rem; color: #718096;">{{ $item->jam_masuk ?? '-' }}</td>
-                                    <td style="padding: 1rem; color: #718096;">{{ $item->jam_pulang ?? '-' }}</td>
+                                    <td style="padding: 1rem; color: #718096;">{{ $item->jam_keluar ?? $item->jam_pulang ?? '-' }}</td>
                                     <td style="padding: 1rem;">
                                         @if($item->jam_masuk)
                                             <span style="background: #d1fae5; color: #065f46; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">
@@ -116,6 +117,23 @@
                                             <span style="background: #fee2e2; color: #991b1b; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">
                                                 <i class="fas fa-times-circle"></i> Tidak Hadir
                                             </span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 1rem;">
+                                        @if($item->latitude && $item->longitude)
+                                            <a href="https://maps.google.com/?q={{ $item->latitude }},{{ $item->longitude }}" target="_blank" style="background: #e2e8f0; color: #4a5568; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; text-decoration: none; display: inline-block; margin-bottom: 0.25rem;">
+                                                <i class="fas fa-map-marker-alt" style="color: #e53e3e;"></i> Maps
+                                            </a>
+                                        @else
+                                            <span style="color: #a0aec0; font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">No GPS</span>
+                                        @endif
+                                        
+                                        @if($item->foto_absen_masuk)
+                                            <a href="{{ asset('storage/foto_absen/' . $item->foto_absen_masuk) }}" target="_blank" style="background: #e2e8f0; color: #4a5568; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; text-decoration: none; display: inline-block;">
+                                                <i class="fas fa-image" style="color: #3182ce;"></i> Foto
+                                            </a>
+                                        @else
+                                            <span style="color: #a0aec0; font-size: 0.75rem; display: block;">No Foto</span>
                                         @endif
                                     </td>
                                 @else

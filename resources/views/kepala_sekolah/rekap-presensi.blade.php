@@ -87,6 +87,7 @@
                         <th style="text-align: center;">Alfa</th>
                         <th style="text-align: center;">Total</th>
                         <th style="text-align: center;">Persentase</th>
+                        <th style="text-align: center;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -98,11 +99,20 @@
                             <td style="text-align: center;"><span class="badge badge-warning">{{ $data->total_sakit ?? $data->sakit ?? 0 }}</span></td>
                             <td style="text-align: center;"><span class="badge badge-danger">{{ $data->total_alpha ?? $data->alfa ?? 0 }}</span></td>
                             <td style="text-align: center; font-weight: 600;">{{ $data->total_hari ?? 0 }}</td>
-                            <td style="text-align: center; font-weight: 600; color: {{ ($data->persentase ?? 0) >= 80 ? '#16a34a' : '#ea580c' }};">{{ $data->persentase ?? 0 }}%</td>
+                            <td style="text-align: center; font-weight: 600; color: #d97706;">{{ $data->persentase ?? 0 }}%</td>
+                            <td style="text-align: center;">
+                                @if($tipe === 'guru')
+                                    <a href="{{ route('kepala_sekolah.detail-presensi-guru', ['id_user' => $data->id_user, 'bulan' => $bulan, 'tahun' => $tahun]) }}" class="btn btn-sm btn-info" style="font-size: 0.8rem; padding: 0.25rem 0.5rem; color: white; background-color: #0ea5e9; border: none; border-radius: 4px; text-decoration: none;">
+                                        <i class="fas fa-search"></i> Detail
+                                    </a>
+                                @else
+                                    <span style="font-size: 0.8rem; color: #94a3b8;">-</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 2rem; color: #718096;">Tidak ada data rekap presensi</td>
+                            <td colspan="8" style="text-align: center; padding: 2rem; color: #718096;">Tidak ada data rekap presensi</td>
                         </tr>
                     @endforelse
                 </tbody>

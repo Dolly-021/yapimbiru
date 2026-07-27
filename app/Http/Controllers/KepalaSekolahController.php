@@ -146,6 +146,22 @@ class KepalaSekolahController extends Controller
         return view('kepala_sekolah.rekap-presensi', compact('rekap', 'bulan', 'tahun', 'tipe'));
     }
 
+    public function detailPresensiGuru(Request $request, $id_user)
+    {
+        $bulan = $request->input('bulan', date('m'));
+        $tahun = $request->input('tahun', date('Y'));
+        
+        $user = User::findOrFail($id_user);
+        
+        $presensi = \App\Models\Presensi::where('id_user', $id_user)
+            ->whereMonth('tanggal', $bulan)
+            ->whereYear('tanggal', $tahun)
+            ->orderBy('tanggal', 'asc')
+            ->get();
+            
+        return view('kepala_sekolah.detail-presensi-guru', compact('user', 'presensi', 'bulan', 'tahun'));
+    }
+
     public function izin()
     {
         $izinList = Izin::with(['user.siswa.kelas', 'guru.user', 'jadwal'])

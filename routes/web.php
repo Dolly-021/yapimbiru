@@ -184,6 +184,7 @@ Route::middleware('auth')->group(function () {
     
     // Kepala Sekolah - Rekap Presensi
     Route::get('/kepala-sekolah/rekap-presensi', [KepalaSekolahController::class, 'rekapPresensi'])->name('kepala_sekolah.rekap-presensi')->middleware('role:kepala_sekolah');
+    Route::get('/kepala-sekolah/rekap-presensi/guru/{id_user}', [KepalaSekolahController::class, 'detailPresensiGuru'])->name('kepala_sekolah.detail-presensi-guru')->middleware('role:kepala_sekolah');
     
     // Kepala Sekolah - Kegiatan Sekolah
     Route::get('/kepala-sekolah/kegiatan', [KepalaSekolahController::class, 'kegiatan'])->name('kepala_sekolah.kegiatan')->middleware('role:kepala_sekolah');

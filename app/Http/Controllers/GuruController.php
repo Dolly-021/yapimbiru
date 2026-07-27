@@ -136,11 +136,24 @@ class GuruController extends Controller
         ]);
     }
 
-    public function absenMasuk()
+    public function absenMasuk(Request $request)
     {
-        $today = date('Y-m-d');
-        $userId = auth()->user()->id_user;
-        $jamSekarang = now()->format('H:i:s'); // Gunakan Carbon timezone-aware
+        // Validasi wajib: GPS dan foto
+        $request->validate([
+            'latitude'  => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'foto'      => 'required|file|image|mimes:jpg,jpeg,png|max:5120',
+        ], [
+            'latitude.required'  => 'Koordinat GPS tidak ditemukan. Pastikan lokasi diaktifkan.',
+            'longitude.required' => 'Koordinat GPS tidak ditemukan. Pastikan lokasi diaktifkan.',
+            'foto.required'      => 'Foto bukti kehadiran wajib diupload.',
+            'foto.image'         => 'File harus berupa gambar (jpg/jpeg/png).',
+            'foto.max'           => 'Ukuran foto maksimal 5MB.',
+        ]);
+
+        $today    = date('Y-m-d');
+        $userId   = auth()->user()->id_user;
+        $jamSekarang = now()->format('H:i:s');
 
         try {
             // Cek apakah sudah absen masuk hari ini
@@ -156,26 +169,39 @@ class GuruController extends Controller
                 ]);
             }
 
-            // Buat atau update presensi - SELALU update dengan jam sekarang
+            // Simpan foto ke storage/app/public/foto_absen/
+            $foto     = $request->file('foto');
+            $namaFoto = 'absen_' . $userId . '_' . date('Ymd_His') . '.' . $foto->getClientOriginalExtension();
+            $foto->storeAs('foto_absen', $namaFoto, 'public');
+
+            // Simpan data presensi beserta GPS, alamat, dan foto
             $presensi = Presensi::updateOrCreate(
                 [
                     'id_user' => $userId,
                     'tanggal' => $today,
                 ],
                 [
-                    'jam_masuk' => $jamSekarang,
-                    'jam_keluar' => null,  // Reset jam keluar
-                    'status' => 'hadir',
+                    'jam_masuk'        => $jamSekarang,
+                    'jam_keluar'       => null,
+                    'status'           => 'hadir',
+                    'latitude'         => $request->latitude,
+                    'longitude'        => $request->longitude,
+                    'alamat'           => $request->input('alamat'),
+                    'foto_absen_masuk' => $namaFoto,
                 ]
             );
 
-            $this->logActivity->log('presensi_masuk', $userId, 'Absen masuk - ' . $jamSekarang);
+            $this->logActivity->log(
+                'presensi_masuk',
+                $userId,
+                'Absen masuk - ' . $jamSekarang . ' | GPS: ' . $request->latitude . ',' . $request->longitude
+            );
 
             return response()->json([
-                'success' => true,
-                'message' => '✅ Absen masuk berhasil dicatat pada jam ' . $jamSekarang,
+                'success'   => true,
+                'message'   => '✅ Absen masuk berhasil dicatat pada jam ' . $jamSekarang,
                 'jam_masuk' => $jamSekarang,
-                'jam_keluar' => null
+                'jam_keluar'=> null
             ]);
         } catch (\Exception $e) {
             return response()->json([
