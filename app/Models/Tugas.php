@@ -10,7 +10,7 @@ class Tugas extends Model
 
     protected $primaryKey = 'id_tugas';
 
-    protected $fillable = ['id_guru', 'id_kelas', 'judul_tugas', 'deskripsi', 'deadline'];
+    protected $fillable = ['id_guru', 'id_kelas', 'judul_tugas', 'deskripsi', 'deadline', 'file_lampiran'];
 
     public $timestamps = false;
 

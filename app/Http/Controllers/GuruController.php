@@ -480,18 +480,28 @@ class GuruController extends Controller
     public function storeTugas(Request $request)
     {
         $request->validate([
-            'id_kelas' => 'required|exists:kelas,id_kelas',
+            'id_kelas'    => 'required|exists:kelas,id_kelas',
             'judul_tugas' => 'required|string|max:200',
-            'deskripsi' => 'nullable|string',
-            'deadline' => 'required|date|after:now',
+            'deskripsi'   => 'nullable|string',
+            'deadline'    => 'required|date|after:now',
+            'file'        => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,zip,rar|max:10240',
         ]);
 
+        $fileLampiran = null;
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $filename = 'tugas_' . auth()->user()->id_user . '_' . date('Ymd_His') . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('tugas_lampiran', $filename, 'public');
+            $fileLampiran = $filename;
+        }
+
         $tugas = Tugas::create([
-            'id_guru' => auth()->user()->guru->id_guru,
-            'id_kelas' => $request->id_kelas,
-            'judul_tugas' => $request->judul_tugas,
-            'deskripsi' => $request->deskripsi,
-            'deadline' => $request->deadline,
+            'id_guru'       => auth()->user()->guru->id_guru,
+            'id_kelas'      => $request->id_kelas,
+            'judul_tugas'   => $request->judul_tugas,
+            'deskripsi'     => $request->deskripsi,
+            'deadline'      => $request->deadline,
+            'file_lampiran' => $fileLampiran,
         ]);
 
         $this->logActivity->logCrud('create', auth()->user()->id_user, 'tugas', $tugas->id_tugas);

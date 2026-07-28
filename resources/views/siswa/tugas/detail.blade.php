@@ -69,6 +69,21 @@
             </h4>
             <p style="color: #475569; line-height: 1.7; white-space: pre-wrap;">{{ $tugas->deskripsi }}</p>
         </div>
+        @if($tugas->file_lampiran)
+        <div style="background: #f0f9ff; padding: 1.25rem 1.5rem; border-radius: 0.5rem; border: 1px solid #bae6fd; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-paperclip" style="color: #0369a1; font-size: 1.25rem;"></i>
+                <div>
+                    <p style="font-weight: 600; color: #0369a1; margin: 0;">File Lampiran dari Guru</p>
+                    <p style="font-size: 0.8rem; color: #64748b; margin: 0;">{{ $tugas->file_lampiran }}</p>
+                </div>
+            </div>
+            <a href="{{ asset('storage/tugas_lampiran/' . $tugas->file_lampiran) }}" target="_blank" download
+               style="display: inline-flex; align-items: center; gap: 0.5rem; background: #0369a1; color: white; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-weight: 600; text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-download"></i> Unduh File
+            </a>
+        </div>
+        @endif
     </div>
 
     <!-- Status Pengumpulan -->
