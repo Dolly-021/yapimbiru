@@ -538,6 +538,24 @@ class GuruController extends Controller
         return redirect()->back()->with('success', 'Nilai berhasil diberikan');
     }
 
+    public function downloadTugasSiswa($id)
+    {
+        $pengumpulan = PengumpulanTugas::findOrFail($id);
+        
+        // Pastikan tugas ini milik guru yang sedang login
+        if ($pengumpulan->tugas->id_guru !== auth()->user()->guru->id_guru) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $filePath = storage_path('app/public/' . $pengumpulan->file_jawaban);
+        
+        if (!file_exists($filePath)) {
+            abort(404, 'File tugas tidak ditemukan di server.');
+        }
+
+        return response()->download($filePath);
+    }
+
     public function deleteTugas($id)
     {
         $tugas = Tugas::findOrFail($id);

@@ -108,9 +108,14 @@
                                 </td>
                                 <td style="padding: 1rem;">
                                     @if($p->file_jawaban)
-                                        <a href="{{ asset('storage/' . $p->file_jawaban) }}" target="_blank" class="btn btn-sm btn-info" style="padding: 0.25rem 0.75rem;">
-                                            <i class="fas fa-download"></i> Download
-                                        </a>
+                                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                            <a href="{{ route('guru.tugas.download-siswa', $p->id_pengumpulan) }}" class="btn btn-sm btn-info" style="padding: 0.25rem 0.75rem;">
+                                                <i class="fas fa-download"></i> Download
+                                            </a>
+                                            <a href="{{ asset('storage/' . $p->file_jawaban) }}" target="_blank" class="btn btn-sm btn-secondary" style="padding: 0.25rem 0.75rem;">
+                                                <i class="fas fa-eye"></i> Preview
+                                            </a>
+                                        </div>
                                     @else
                                         <span style="color: #94a3b8;">-</span>
                                     @endif
