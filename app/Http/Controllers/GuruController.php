@@ -556,6 +556,34 @@ class GuruController extends Controller
         return response()->download($filePath);
     }
 
+    public function previewTugasSiswa($id)
+    {
+        $pengumpulan = PengumpulanTugas::findOrFail($id);
+        
+        if ($pengumpulan->tugas->id_guru !== auth()->user()->guru->id_guru) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $filePath = storage_path('app/public/' . $pengumpulan->file_jawaban);
+        
+        if (!file_exists($filePath)) {
+            abort(404, 'File tugas tidak ditemukan di server.');
+        }
+
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $mimeType = mime_content_type($filePath);
+
+        // Jika file bukan gambar atau PDF, tidak bisa di-preview langsung oleh browser (akan terdownload)
+        if (!in_array(strtolower($extension), ['pdf', 'jpg', 'jpeg', 'png'])) {
+            return back()->with('error', 'File dengan format .' . $extension . ' tidak dapat di-preview. Silakan klik tombol Download.');
+        }
+
+        return response()->file($filePath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . basename($filePath) . '"'
+        ]);
+    }
+
     public function deleteTugas($id)
     {
         $tugas = Tugas::findOrFail($id);

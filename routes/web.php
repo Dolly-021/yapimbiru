@@ -116,6 +116,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/guru/tugas/{id}/nilai', [GuruController::class, 'nilaiTugas'])->name('guru.tugas.nilai')->middleware('role:guru');
     Route::delete('/guru/tugas/{id}', [GuruController::class, 'deleteTugas'])->name('guru.tugas.delete')->middleware('role:guru');
     Route::get('/guru/tugas/pengumpulan/{id}/download', [GuruController::class, 'downloadTugasSiswa'])->name('guru.tugas.download-siswa')->middleware('role:guru');
+    Route::get('/guru/tugas/pengumpulan/{id}/preview', [GuruController::class, 'previewTugasSiswa'])->name('guru.tugas.preview-siswa')->middleware('role:guru');
     
     // Guru - Absen Siswa
     Route::get('/guru/absen', [\App\Http\Controllers\Guru\AbsenController::class, 'index'])->name('guru.absen.index')->middleware('role:guru');
